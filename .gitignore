@@ -52,35 +52,10 @@ send_now_tokens*
 deploy_my_quiz.js
 Token.sol
 
-node_modules
-.env
+myquiz2*
 
-# Hardhat files
-/cache
-/artifacts
+get_*
 
-# TypeChain files
-/typechain
-/typechain-types
+val2*
 
-# solidity-coverage files
-/coverage
-/coverage.json
-
-node_modules
-.env
-
-# Hardhat files
-/cache
-/artifacts
-
-# TypeChain files
-/typechain
-/typechain-types
-
-# solidity-coverage files
-/coverage
-/coverage.json
-
-# Hardhat Ignition default folder for deployments against a local node
-ignition/deployments/chain-31337
+ERC20*
