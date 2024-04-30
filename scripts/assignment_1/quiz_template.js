@@ -45,11 +45,15 @@ async function main() {
     // Hint: method `askQuestion()`
 
     // Your code here.
+    const transaction = await quizContract.askQuestion();
+    const receipt = await transaction.wait();
 
     // From the transaction receipt we can extract useful information, such as
     // as the question's text and id that were stored in the logs
     // (we will understand logs in detail later in the course).
     const { text, id } = extractQuestion(quizContract, receipt);
+    console.log("Question:", text);
+    console.log("Question ID:", id);
 
     // Now YOU answer the question!
     // Capture user input from the terminal.
@@ -59,11 +63,13 @@ async function main() {
     // Hint: method `answerQuestion`.
 
     // Your code here.
-
+    await quizContract.answerQuestion(id, userAnswer);
     // C. Optional. Verify that the answer is correctly stored.
     // Hint: method `getAnswer(questionId)`
 
     // Your code here.
+    const storedAnswer = await quizContract.getAnswer(id);
+    console.log("Stored Answer:", storedAnswer);
 }
 
 

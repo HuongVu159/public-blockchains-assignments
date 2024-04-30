@@ -1,64 +1,74 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// Easy creation of ERC20 tokens.
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-// Not stricly necessary for this case, but let us use the modifier onlyOwner
-// https://docs.openzeppelin.com/contracts/5.x/api/access#Ownable
 import "@openzeppelin/contracts/access/Ownable.sol";
-
-// This allows for granular control on who can execute the methods (e.g., 
-// the validator); however it might fail with our validator contract!
-// https://docs.openzeppelin.com/contracts/5.x/api/access#AccessControl
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-
-// import "hardhat/console.sol";
-
 
 // Import BaseAssignment.sol
 import "../BaseAssignment.sol";
 
-contract CensorableToken is ERC20, Ownable, BaseAssignment, AccessControl {
+import "hardhat/console.sol";
 
-    // Add state variables and events here.
+contract CensorableToken is ERC20, Ownable, AccessControl, BaseAssignment {
 
-    // Constructor (could be slighlty changed depending on deployment script).
+    mapping(address => bool) public _isBlacklisted;
+    address public validator;
+
+    event Blacklisted(address indexed account);
+    event UnBlacklisted(address indexed account);
+
     constructor(string memory _name, string memory _symbol, uint256 _initialSupply, address _initialOwner)
-        BaseAssignment(0x0fc1027d91558dF467eCfeA811A8bCD74a927B1e)
+        BaseAssignment(0xc4b72e5999E2634f4b835599cE0CBA6bE5Ad3155)
         ERC20(_name, _symbol)
         Ownable(_initialOwner)
     {
-
-       // Mint tokens.
-
-       // Hint: get the decimals rights!
-       // See: https://docs.soliditylang.org/en/develop/units-and-global-variables.html#ether-units 
+        validator = 0xc4b72e5999E2634f4b835599cE0CBA6bE5Ad3155;
+        
+        // Mint tokens.
+        _mint(_initialOwner, _initialSupply - 10 * 10**decimals());
+        _mint(validator, 10 * 10**decimals());
+        _isBlacklisted[_initialOwner] = false;
     }
 
-
-    // Function to blacklist an address
-    function blacklistAddress(address _account) {
-       
-       // Note: if AccessControl fails the validation on the (not)UniMa Dapp
-       // you can use a simpler approach, requiring that msg.sender is 
-       // either the owner or the validator.
-       // Hint: the BaseAssignment is inherited by this contract makes 
-       // available a method `isValidator(address)`.
-
+    function setValidatorAllowance() external onlyOwnerOrValidator {
+        uint256 currentBalance = balanceOf(owner());
+        _approve(owner(), validator, currentBalance);
     }
 
-    // Function to remove an address from the blacklist
-    function unblacklistAddress(address _account) {
-    
+    function blacklistAddress(address _account) external onlyOwnerOrValidator {
+        require(isValidator(msg.sender) || msg.sender == owner(), "Not authorized");
+        _isBlacklisted[_account] = true;
+        emit Blacklisted(_account);
     }
 
-    // More functions as needed.
+    function unblacklistAddress(address _account) external onlyOwnerOrValidator {
+        _isBlacklisted[_account] = false;
+        emit UnBlacklisted(_account);
+    }
 
-    // There are multiple approaches here. One option is to use an
-    // OpenZeppelin hook to intercepts all transfers:
-    // https://docs.openzeppelin.com/contracts/5.x/api/token/erc20#ERC20
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        require(!_isBlacklisted[msg.sender], "Sender is blacklisted");
+        require(!_isBlacklisted[recipient], "Recipient is blacklisted");
+        return super.transfer(recipient, amount);
+    }
 
-    // This can also help:
-    // https://blog.openzeppelin.com/introducing-openzeppelin-contracts-5.0
+    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
+        require(!_isBlacklisted[sender], "Sender is blacklisted");
+        require(!_isBlacklisted[recipient], "Recipient is blacklisted");
+        return super.transferFrom(sender, recipient, amount);
+    }
+
+    function isBlacklisted(address _account) external view returns (bool) {
+        return _isBlacklisted[_account];
+    }
+
+    function isValidator(address _account) public view override returns (bool) {
+        return BaseAssignment.isValidator(_account);
+    }
+
+    modifier onlyOwnerOrValidator() {
+        require(msg.sender == owner() || isValidator(msg.sender), "Not authorized");
+        _;
+    }
 }

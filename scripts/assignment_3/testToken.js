@@ -16,7 +16,7 @@ async function main() {
     const [signer1, signer2, signer3] = await ethers.getSigners();
 
     // Pick the deployer (default is signer1).
-    const signer = signer3;
+    const signer = signer1;
     console.log("Deployer of contract is:", signer.address);
 
 
@@ -24,16 +24,18 @@ async function main() {
     ////////////
 
     // Contract address.
-    const contractAddr = "YOUR_CONTRACT_ADDRESS";
+    const contractAddr = "0x8dE8D44518A432290025d6D3262D8092D1A3F011";
 
     // Locate ABI as created by Hardhat after compilation/deployment.
     // (adjust names and path accordingly).
     const pathToABI = path.join(
         __dirname,
         "..",
+        "..",
         "artifacts",
         "contracts",
-        "Token.sol",
+        "assignment_3",
+        "Token_template.sol",
         "CensorableToken.json"
     );
     // console.log(pathToABI);
@@ -61,7 +63,7 @@ async function main() {
 
     // Validator address
     // (or any other address, not actually used for validation here).
-    const validatorAddr = "0x0fc1027d91558dF467eCfeA811A8bCD74a927B1e";
+    const validatorAddr = "0xc4b72e5999E2634f4b835599cE0CBA6bE5Ad3155";
 
     // TASK A.
     //////////
@@ -93,7 +95,7 @@ async function main() {
         }
     };
 
-    // await taskA1();
+    await taskA1();
 
     const taskA2 = async function () {
       console.log("TASK A2");
@@ -112,7 +114,7 @@ async function main() {
 
     };
 
-    // await taskA2();
+    await taskA2();
 
     // TASK B and C.
     ////////////////
@@ -147,7 +149,7 @@ async function main() {
         if (cb) await cb(addr, bl);
     };
 
-    // await taskBandC(testAddr);
+    await taskBandC(testAddr);
 
     // TASK D.
     //////////
@@ -178,7 +180,7 @@ async function main() {
 
     };
 
-    // await taskBandC(testAddr, taskDcb);
+    await taskBandC(testAddr, taskDcb);
 
     async function taskDcbFrom(addr) {
       
@@ -199,8 +201,8 @@ async function main() {
       
       // Create contract with testSigner.
       const contractFrom = new ethers.Contract(contractAddr, ABI, testSigner);
-      // const isBlacklisted2 = await contractFrom.isBlacklisted(addr);
-      // console.log('CFrom is blacklisted', isBlacklisted2);
+      const isBlacklisted2 = await contractFrom.isBlacklisted(addr);
+      console.log('CFrom is blacklisted', isBlacklisted2);
 
       try {
         tx = await contractFrom.transfer(owner, ethers.parseEther("1"));
@@ -212,7 +214,7 @@ async function main() {
       }
     };
 
-    // await taskDcbFrom(testAddr);
+    await taskDcbFrom(testAddr);
 
     // TASK E.
     //////////
@@ -230,7 +232,7 @@ async function main() {
       let eventCounterBl  = 0;
       let eventCounterUbl = 0;
       const eventBlacklisted = 'Blacklisted';
-      const eventUnblacklisted = 'Unblacklisted';
+      const eventUnBlacklisted = 'UnBlacklisted';
       events.forEach(logToParse => {
         const parsedLog = contractInterface.parseLog(logToParse);
         // console.log(parsedLog)
@@ -238,12 +240,12 @@ async function main() {
           
           if (parsedLog.args[0] === testAddr) eventCounterBl++;
         }
-        else if (parsedLog.name === eventUnblacklisted) {
+        else if (parsedLog.name === eventUnBlacklisted) {
           if (parsedLog.args[0] === testAddr) eventCounterUbl++;
         }
       });
 
-      // console.log(eventCounterBl, eventCounterUbl);
+      console.log(eventCounterBl, eventCounterUbl);
 
       if (eventCounterBl > 0 && eventCounterUbl > 0) {
         console.log("  OK! Events correctly emitted!");

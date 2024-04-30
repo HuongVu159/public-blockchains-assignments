@@ -49,7 +49,7 @@ contract BaseAssignment {
     }
 
     // return if the current tester is a validator
-    function isValidator(address _address) public view returns (bool) {
+    function isValidator(address _address) public virtual view returns (bool) {
         require(_validator != address(0), "Validator address is not set");
 
         if (IBaseValidator(_validator).isValidator(_address)) return true;
